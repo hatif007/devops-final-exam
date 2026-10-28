@@ -1,0 +1,21 @@
+# this is a sample YAML file for the hello world application
+course: "devops"
+lesson: 2
+completed: true
+message: "Hello World"
+student: 
+  name: "Yoav Barel"
+  age: 48
+  active: true
+  hobbies:
+    - "Gaming"
+    - "Traveling"
+    - "music"
+tools:
+  - name: "jenkins"
+    category: "CI/CD"
+  - name: "docker"
+    category: "Containers"
+  - name: "github"  
+    category: "Source Control"
+     

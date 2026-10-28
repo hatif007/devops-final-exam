@@ -1,0 +1,12 @@
+persistence:
+  enabled: true
+  storageClass: "standard"
+  size: "8Gi"
+controller:
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "256Mi"
+    limits:
+      cpu: "2000m"
+      memory: "4096Mi"  

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: yaml-deployment-practice
+spec:
+  replicas: 3
+
+  selector:
+    matchLabels:
+      app: yaml-deployment-practice
+
+  template:
+    metadata:
+      labels:
+        app: yaml-deployment-practice
+    spec:
+      containers:
+        - name: nginx-web
+          image: nginx:stable
+          ports:
+            - containerPort: 80  
