@@ -7,8 +7,8 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-    - name: inspector
-      image: busybox:1.36
+    - name: python
+      image: python:3.13-slim
       command:
         - cat
       tty: true
@@ -17,20 +17,18 @@ spec:
     }
 
     stages {
-        stage('SystemInfo') {
+        stage('python') {
             steps {
-                container('inspector') {
-                    sh 'hostname'
-sh 'uname -a'
-sh 'whoami'
-sh 'pwd'
+                container('python') {
+                 sh   'python --version'
+                   sh 'python -m pip --version'
                 }        
                 }    
         }
 
         stage('Finish') {
             steps {
-                echo 'Linux inspection completed successfully'
+                echo 'MY APP IS WORKING   completed successfully'
             }
         }
     }
