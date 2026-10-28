@@ -99,6 +99,13 @@ stage('Check Docker Engine') {
         }
     }
 }
+stage('Build Docker Image') {
+    steps {
+        container('docker') {
+            sh 'docker build -t devops-final-exam:$BUILD_NUMBER .'
+        }
+    }
+}
 stage('finish') {
             steps {
                 echo 'finish'
