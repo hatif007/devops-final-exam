@@ -3,6 +3,10 @@ pipeline {
     agent {
         kubernetes {
             yaml '''
+
+agent {
+    kubernetes {
+        yaml '''
 apiVersion: v1
 kind: Pod
 spec:
@@ -19,10 +23,19 @@ spec:
         privileged: true
       
 
+    - name: trivy
+      image: aquasec/trivy:0.76.0
+      command:
+        - cat
+      tty: true
+
   volumes:
     - name: docker-storage
       emptyDir: {}
 '''
+    
+
+
         }
     }
 
@@ -103,6 +116,11 @@ spec:
 
         stage('Scan Docker Image') {
             steps {
+       
+        catchError(
+            buildResult: 'SUCCESS',
+            stageResult: 'UNSTABLE',
+            message: 'Trivy found image vulnerabilities'    
                 container('docker') {
                     sh '''
                         docker run --rm \
