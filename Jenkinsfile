@@ -37,6 +37,16 @@ spec:
             }
         }
 
+stage('python qa auto test') {
+            steps {
+                container('python') {
+                sh 'python -m pytest -v'
+            }
+
+        }
+
+        
+    }
 stage('finish') {
             steps {
                 echo 'finish'
