@@ -42,10 +42,22 @@ stage('python qa auto test') {
                 container('python') {
                 sh 'python -m pytest -v'
             }
-
+            }
         }
-
-        
+ stage('Parallel  Checks') {       
+parallel {
+                stage('Linting') {
+                    steps {
+                        echo  'Linting'
+                    }
+                }
+                stage('Security Scan') {
+                    steps {
+                        echo  'Security Scan'
+                    }
+                }
+            }
+ }
     }
 stage('finish') {
             steps {
@@ -56,4 +68,4 @@ stage('finish') {
 
         
     }
-}
+
