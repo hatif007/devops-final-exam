@@ -120,6 +120,8 @@ spec:
             buildResult: 'SUCCESS',
             stageResult: 'UNSTABLE',
             message: 'Trivy found image vulnerabilities'    
+            )
+        }
                 container('docker') {
                     sh '''
                         docker run --rm \
