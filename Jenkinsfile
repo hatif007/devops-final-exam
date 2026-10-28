@@ -106,6 +106,27 @@ stage('Build Docker Image') {
         }
     }
 }
+
+stage('Push to Docker Hub') {
+    steps {
+        container('docker') {
+            withCredentials([usernamePassword(
+                credentialsId: 'Docker_hub',
+                usernameVariable: 'DOCKER_USERNAME',
+                passwordVariable: 'DOCKER_PASSWORD'
+            )]) {
+                sh '''
+                    docker tag devops-final-exam:$BUILD_NUMBER $DOCKER_USERNAME/devops-final-exam:$BUILD_NUMBER
+
+                    printf '%s' "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+                    docker push $DOCKER_USERNAME/devops-final-exam:$BUILD_NUMBER
+                '''
+            }
+        }
+    }
+}
+
 stage('finish') {
             steps {
                 echo 'finish'
