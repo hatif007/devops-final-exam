@@ -113,29 +113,30 @@ spec:
             }
         }
 
-        stage('Scan Docker Image') {
-            steps {
-       
+        
+stage('Scan Docker Image') {
+    steps {
         catchError(
             buildResult: 'SUCCESS',
             stageResult: 'UNSTABLE',
-            message: 'Trivy found image vulnerabilities'    
-            )
-        
-                container('docker') {
-                    sh '''
-                        docker run --rm \
-                          -v /var/run/docker.sock:/var/run/docker.sock \
-                          aquasec/trivy:0.76.1 image \
-                          --image-src docker \
-                          --scanners vuln \
-                          --severity HIGH,CRITICAL \
-                          --exit-code 0 \
-                          devops-final-exam:$BUILD_NUMBER
-                    '''
-                }
+            message: 'Trivy found image vulnerabilities'
+        ) {
+            container('docker') {
+                sh '''
+                    docker run --rm \
+                      -v /var/run/docker.sock:/var/run/docker.sock \
+                      aquasec/trivy:0.76.1 image \
+                      --image-src docker \
+                      --scanners vuln \
+                      --severity HIGH,CRITICAL \
+                      --exit-code 1 \
+                      devops-final-exam:$BUILD_NUMBER
+                '''
             }
         }
+    }
+}
+
 
         stage('Push to Docker Hub') {
             steps {
