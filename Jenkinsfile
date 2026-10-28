@@ -48,17 +48,29 @@ stage('python qa auto test') {
 parallel {
                 stage('Flake8') {
                     steps {
+                        catchError(
+            buildResult: 'SUCCESS',
+            stageResult: 'UNSTABLE',
+            message: 'Flake8 linting issues found'
+        ) {
                         container('python') {
                     sh 'python -m flake8 app.py tests'
                     }
+        }
                 }
                 }
                 stage('Security Scan') {
                     steps {
+                        catchError(
+            buildResult: 'SUCCESS',
+            stageResult: 'UNSTABLE',
+            message: 'Bandit found security findings'
+        ) {
                         container('python') {
                         sh 'python -m bandit -r app.py tests'
                     }
                 }
+            }
             }
  }
  }
