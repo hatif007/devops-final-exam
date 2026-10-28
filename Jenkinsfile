@@ -32,7 +32,7 @@ spec:
         stage('Install Dependencies') {
             steps {
                  container('python') {
-                sh  'pip install -r requirements.txt pytest'
+                sh  'pip install -r requirements.txt pytest,bandit,flake8'
             }
             }
         }
