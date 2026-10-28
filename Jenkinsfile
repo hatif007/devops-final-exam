@@ -3,17 +3,31 @@ pipeline {
     agent  {
         kubernetes {
             yaml '''
+
 apiVersion: v1
 kind: Pod
 spec:
+  containers:
+    - name: python
+      image: python:3.13-slim
+      command:
+        - cat
+      tty: true
 
-   
- containers:
-  - name: python
-    image: python:3.13-slim
-    command:
-      - cat
-    tty: true
+    - name: docker
+      image: docker:29-dind
+      securityContext:
+        privileged: true
+      env:
+        - name: DOCKER_HOST
+          value: unix:///var/run/docker.sock
+      volumeMounts:
+        - name: docker-storage
+          mountPath: /var/lib/docker
+
+  volumes:
+    - name: docker-storage
+      emptyDir: {}
 '''
         }
     }
@@ -70,10 +84,21 @@ parallel {
                         sh 'python -m bandit -r app.py tests'
                     }
                 }
+                
+}
             }
             }
  }
- }
+ 
+stage('Check Docker Engine') {
+    steps {
+        container('docker') {
+            echo 'Waiting for Docker daemon...'
+            sleep 5
+            sh 'docker version'
+        }
+    }
+}
 stage('finish') {
             steps {
                 echo 'finish'
