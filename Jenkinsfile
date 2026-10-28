@@ -46,19 +46,22 @@ stage('python qa auto test') {
         }
  stage('Parallel  Checks') {       
 parallel {
-                stage('Linting') {
+                stage('Flake8') {
                     steps {
-                        echo  'Linting'
+                        container('python') {
+                    sh 'python -m flake8 app.py tests'
                     }
+                }
                 }
                 stage('Security Scan') {
                     steps {
-                        echo  'Security Scan'
+                        container('python') {
+                        sh 'python -m bandit -r app.py tests'
                     }
                 }
             }
  }
-    
+ }
 stage('finish') {
             steps {
                 echo 'finish'
