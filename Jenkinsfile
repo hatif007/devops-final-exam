@@ -1,17 +1,19 @@
 
 pipeline {
-    agent {
+    agent  {
         kubernetes {
             yaml '''
 apiVersion: v1
 kind: Pod
 spec:
-  containers:
-    - name: python
-      image: python:3.13-slim
-      command:
-        - cat
-      tty: true
+
+   
+ containers:
+  - name: python
+    image: python:3.13-slim
+    command:
+      - cat
+    tty: true
 '''
         }
     }
@@ -21,15 +23,27 @@ spec:
             steps {
                 container('python') {
                  sh   'python --version'
-                   sh 'python -m pip --version'
-                }        
+              
+                  
                 }    
+            }    
         }
-
-        stage('Finish') {
+    
+        stage('Install Dependencies') {
             steps {
-                echo 'MY APP IS WORKING   completed successfully'
+                 container('python') {
+                sh  'pip install -r requirements.txt pytest'
+            }
             }
         }
+
+stage('finish') {
+            steps {
+                echo 'finish'
+            }
+
+        }
+
+        
     }
 }
