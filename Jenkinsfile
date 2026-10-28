@@ -2,10 +2,9 @@
 pipeline {
     agent {
         kubernetes {
-            yaml '''
+           
 
-agent {
-    kubernetes {
+
         yaml '''
 apiVersion: v1
 kind: Pod
