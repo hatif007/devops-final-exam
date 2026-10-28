@@ -19,6 +19,6 @@ def test_json_status():
 def test_not_found():
     client = app.test_client()
     response = client.get("/NOT_FOUND")
-    assert response.status_code == 200
+    assert response.status_code == 404
    
 
