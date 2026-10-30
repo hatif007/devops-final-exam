@@ -1,0 +1,24 @@
+
+
+pods:
+  image: hatif007/devops-final-exam
+  tag: "22"
+  replicas: 2
+  containerPort: 8082
+service:
+  type: LoadBalancer
+  
+  port: 80   
+  targetPort: 8082
+resources:
+  requests:
+    cpu: "100m"
+    memory: "512Mi"
+  limits:
+    cpu: "500m"
+    memory: "2Gi"
+ingress:
+  enabled: true
+  className: nginx
+  path: /
+  pathType: Prefix    
