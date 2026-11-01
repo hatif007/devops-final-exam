@@ -9,8 +9,7 @@ spec:
   containers:
     - name: python
       image: python:3.13-slim
-      command:
-        - cat
+      command: ["cat"]
       tty: true
 
     - name: docker
@@ -20,20 +19,17 @@ spec:
 
     - name: trivy
       image: aquasec/trivy:0.76.0
-      command:
-        - cat
+      command: ["cat"]
       tty: true
 
     - name: git
       image: alpine/git:latest
-      command:
-        - cat
+      command: ["cat"]
       tty: true
 
     - name: tools
       image: mikefarah/yq:4
-      command:
-        - cat
+      command: ["cat"]
       tty: true
 
   volumes:
@@ -44,7 +40,8 @@ spec:
     }
 
     stages {
-        stage('python') {
+
+        stage('Python Version') {
             steps {
                 container('python') {
                     sh 'python --version'
@@ -60,7 +57,7 @@ spec:
             }
         }
 
-        stage('python qa auto test') {
+        stage('Python QA Tests') {
             steps {
                 container('python') {
                     sh 'python -m pytest -v'
@@ -84,12 +81,12 @@ spec:
                     }
                 }
 
-                stage('Security Scan') {
+                stage('Bandit Security Scan') {
                     steps {
                         catchError(
                             buildResult: 'SUCCESS',
                             stageResult: 'UNSTABLE',
-                            message: 'Bandit found security findings'
+                            message: 'Bandit security findings'
                         ) {
                             container('python') {
                                 sh 'python -m bandit -r app.py tests'
@@ -103,7 +100,7 @@ spec:
         stage('Check Docker Engine') {
             steps {
                 container('docker') {
-                    echo 'Waiting for Docker daemon...'
+                    echo 'Checking Docker daemon...'
                     sleep 5
                     sh 'docker version'
                 }
@@ -123,7 +120,7 @@ spec:
                 catchError(
                     buildResult: 'SUCCESS',
                     stageResult: 'UNSTABLE',
-                    message: 'Trivy found image vulnerabilities'
+                    message: 'Trivy found vulnerabilities'
                 ) {
                     container('docker') {
                         sh '''
@@ -144,19 +141,25 @@ spec:
         stage('Push to Docker Hub') {
             steps {
                 container('docker') {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'Docker_hub',
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )]) {
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'Docker_hub',
+                            usernameVariable: 'DOCKER_USERNAME',
+                            passwordVariable: 'DOCKER_PASSWORD'
+                        )
+                    ]) {
                         sh '''
-                            docker tag devops-final-exam:$BUILD_NUMBER \
+                            docker tag \
+                              devops-final-exam:$BUILD_NUMBER \
                               $DOCKER_USERNAME/devops-final-exam:$BUILD_NUMBER
 
                             printf '%s' "$DOCKER_PASSWORD" | \
-                              docker login -u "$DOCKER_USERNAME" --password-stdin
+                              docker login \
+                                -u "$DOCKER_USERNAME" \
+                                --password-stdin
 
-                            docker push $DOCKER_USERNAME/devops-final-exam:$BUILD_NUMBER
+                            docker push \
+                              $DOCKER_USERNAME/devops-final-exam:$BUILD_NUMBER
                         '''
                     }
                 }
@@ -167,8 +170,9 @@ spec:
             steps {
                 dir('gitops-config') {
 
-                    // 1. Checkout GitOps repository
                     container('git') {
+                        echo 'Checking out GitOps repository...'
+
                         git branch: 'main',
                             credentialsId: 'github-gitops',
                             url: 'https://github.com/hatif007/devops-final-exam-gitops.git'
@@ -177,9 +181,11 @@ spec:
                         sh 'git status -sb'
                     }
 
-                    // 2. Update DEV image tag only when needed
                     container('tools') {
+                        echo 'Updating DEV image tag...'
+
                         sh 'yq --version'
+
                         sh '''
                             FILE=environments/dev/values.yaml
                             CURRENT_TAG=$(yq -r '.pods.tag' "$FILE")
@@ -187,12 +193,11 @@ spec:
                             if [ "$CURRENT_TAG" != "$BUILD_NUMBER" ]; then
                                 yq -i '.pods.tag = strenv(BUILD_NUMBER)' "$FILE"
                             else
-                                echo "DEV image tag already up to date."
+                                echo "DEV image tag is already up to date."
                             fi
                         '''
                     }
 
-                    // 3. Review, commit and push
                     container('git') {
                         echo 'Reviewing GitOps changes...'
 
@@ -204,36 +209,44 @@ spec:
                         sh 'git add -- environments/dev/values.yaml'
                         sh 'git diff --cached --check'
 
-                        def diffStatus = sh(
-                            script: 'git diff --cached --quiet',
-                            returnStatus: true
-                        )
+                        script {
+                            def diffStatus = sh(
+                                script: 'git diff --cached --quiet',
+                                returnStatus: true
+                            )
 
-                        if (diffStatus == 1) {
-                            sh 'git commit -m "Update DEV image tag to $BUILD_NUMBER"'
+                            if (diffStatus == 1) {
 
-                            withCredentials([
-                                gitUsernamePassword(credentialsId: 'github-gitops')
-                            ]) {
-                                sh 'git push origin main'
+                                sh 'git commit -m "Update DEV image tag to $BUILD_NUMBER"'
+
+                                withCredentials([
+                                    gitUsernamePassword(
+                                        credentialsId: 'github-gitops'
+                                    )
+                                ]) {
+                                    sh 'git push origin main'
+                                }
+
+                                echo 'GitOps push completed successfully.'
+
+                            } else if (diffStatus == 0) {
+
+                                echo 'No changes to commit. Skipping push.'
+
+                            } else {
+
+                                error "Git diff failed with exit code ${diffStatus}"
+
                             }
-
-                            echo 'GitOps push completed.'
-
-                        } else if (diffStatus == 0) {
-                            echo 'No changes to commit. Skipping push.'
-
-                        } else {
-                            error "Git diff failed with exit code ${diffStatus}"
                         }
                     }
                 }
             }
         }
 
-        stage('finish') {
+        stage('Finish') {
             steps {
-                echo 'Pipeline completed.'
+                echo 'Jenkins CI and GitOps stages completed.'
             }
         }
     }
